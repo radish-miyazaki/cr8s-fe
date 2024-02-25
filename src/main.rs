@@ -1,9 +1,12 @@
+mod pages;
+mod components;
+
 use yew::prelude::*;
 
 #[function_component(App)]
 fn app() -> Html {
     html! {
-        <p>{"Hello world!"}</p>
+        <pages::login::Login />
     }
 }
 
