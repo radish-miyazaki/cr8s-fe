@@ -1,5 +1,5 @@
-mod pages;
 mod components;
+mod pages;
 
 use yew::prelude::*;
 
