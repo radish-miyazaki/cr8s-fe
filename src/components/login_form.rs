@@ -1,8 +1,21 @@
 use gloo_console::log;
 use web_sys::HtmlInputElement;
-use yew::prelude::*;
+use yew::{platform::spawn_local, prelude::*};
 
-use crate::components::input::*;
+use crate::{
+    api::user::{api_login, api_me, LoginResponse, MeResponse},
+    components::{alert::Alert, input::Input},
+};
+
+async fn login(
+    username: String,
+    password: String,
+) -> Result<(LoginResponse, MeResponse), gloo_net::Error> {
+    let login_resposne = api_login(username, password).await?;
+    let me_response = api_me(&login_resposne.token).await?;
+
+    Ok((login_resposne, me_response))
+}
 
 #[function_component(LoginForm)]
 pub fn login_form() -> Html {
@@ -24,19 +37,30 @@ pub fn login_form() -> Html {
         }
     });
 
+    let error_message_handle = use_state(String::default);
+    let error_message = (*error_message_handle).clone();
+
     let cloned_username = username.clone();
     let cloned_password = password.clone();
     let onsubmit = Callback::from(move |e: SubmitEvent| {
         e.prevent_default();
-        log!(
-            "Submiting form",
-            cloned_username.clone(),
-            cloned_password.clone()
-        );
+
+        let cloned_username = cloned_username.clone();
+        let cloned_password = cloned_password.clone();
+        let cloned_error_handle = error_message_handle.clone();
+        spawn_local(async move {
+            match login(cloned_username.clone(), cloned_password.clone()).await {
+                Ok(responses) => log!(responses.1.username),
+                Err(e) => cloned_error_handle.set(e.to_string()),
+            }
+        })
     });
 
     html! {
         <form onsubmit={onsubmit}>
+            if !error_message.is_empty() {
+                <Alert message={error_message} alert_type={"danger"} />
+            }
             <div class="mb-3">
                 <Input
                     input_type="text"
