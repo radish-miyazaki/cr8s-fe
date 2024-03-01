@@ -5,6 +5,7 @@ use yew_router::prelude::*;
 use crate::{
     api::user::{api_login, api_me, LoginResponse, MeResponse},
     components::{alert::Alert, input::Input},
+    contexts::{CurrentDispatchAction, CurrentUserAction, CurrentUserContext},
     Route,
 };
 
@@ -21,6 +22,8 @@ async fn login(
 #[function_component(LoginForm)]
 pub fn login_form() -> Html {
     let navigator = use_navigator();
+    let current_user_context =
+        use_context::<CurrentUserContext>().expect("Current user context is missing.");
 
     let username_handle = use_state(String::default);
     let username = (*username_handle).clone();
@@ -52,9 +55,16 @@ pub fn login_form() -> Html {
         let cloned_password = cloned_password.clone();
         let cloned_error_handle = error_message_handle.clone();
         let cloned_navigator = navigator.clone();
+        let cloned_current_user_context = current_user_context.clone();
         spawn_local(async move {
             match login(cloned_username.clone(), cloned_password.clone()).await {
-                Ok(_responses) => {
+                Ok(responses) => {
+                    cloned_current_user_context.dispatch(CurrentDispatchAction {
+                        action_type: CurrentUserAction::LoginSuccess,
+                        login_response: Some(responses.0),
+                        me_response: Some(responses.1),
+                    });
+
                     if let Some(nav) = cloned_navigator {
                         nav.push(&Route::Home);
                     }
