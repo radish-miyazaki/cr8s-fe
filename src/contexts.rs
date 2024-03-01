@@ -28,25 +28,31 @@ impl Reducible for CurrentUser {
     type Action = CurrentDispatchAction;
 
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
-        let login_response = action.login_response.expect("Missing login response");
-        let me_response = action.me_response.expect("Missing me response");
-        let _ = SessionStorage::set("cr8s_token", login_response.token.clone());
-
         match action.action_type {
-            CurrentUserAction::LoginSuccess => Self {
-                user: Some(User {
-                    id: me_response.id,
-                    username: me_response.username,
-                    created_at: me_response.created_at,
-                }),
-                token: Some(login_response.token),
+            CurrentUserAction::LoginSuccess => {
+                let login_response = action.login_response.expect("Missing login response");
+                let me_response = action.me_response.expect("Missing me response");
+                let _ = SessionStorage::set("cr8s_token", login_response.token.clone());
+
+                Self {
+                    user: Some(User {
+                        id: me_response.id,
+                        username: me_response.username,
+                        created_at: me_response.created_at,
+                    }),
+                    token: Some(login_response.token),
+                }
+                .into()
             }
-            .into(),
-            CurrentUserAction::LoginFail => Self {
-                user: None,
-                token: None,
+            CurrentUserAction::LoginFail => {
+                SessionStorage::clear();
+
+                Self {
+                    user: None,
+                    token: None,
+                }
+                .into()
             }
-            .into(),
         }
     }
 }
