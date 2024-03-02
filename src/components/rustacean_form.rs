@@ -3,24 +3,11 @@ use yew::{platform::spawn_local, prelude::*};
 use yew_router::prelude::*;
 
 use crate::{
-    api::{
-        rustaceans::api_rustacean_create,
-        user::{api_login, api_me, LoginResponse, MeResponse},
-    },
+    api::rustaceans::api_rustacean_create,
     components::{alert::Alert, input::Input},
     contexts::CurrentUserContext,
     Route,
 };
-
-async fn login(
-    username: String,
-    password: String,
-) -> Result<(LoginResponse, MeResponse), gloo_net::Error> {
-    let login_resposne = api_login(username, password).await?;
-    let me_response = api_me(&login_resposne.token).await?;
-
-    Ok((login_resposne, me_response))
-}
 
 #[function_component(RustaceanForm)]
 pub fn rustacean_form() -> Html {
@@ -71,7 +58,7 @@ pub fn rustacean_form() -> Html {
                     )
                     .await
                     {
-                        Ok(rustacean) => {
+                        Ok(_) => {
                             cloned_navigator.push(&Route::Rustaceans);
                         }
                         Err(e) => cloned_error_handle.set(e.to_string()),
