@@ -1,6 +1,7 @@
 mod api;
 mod components;
 mod contexts;
+mod hooks;
 mod pages;
 
 use yew::prelude::*;
